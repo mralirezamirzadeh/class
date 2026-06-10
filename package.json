@@ -1,0 +1,46 @@
+{
+  "name": "SchoolManagement",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "concurrently \"npm run dev --prefix renderer\" \"wait-on http://localhost:5173 && electron .\"",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "docker:win": "docker run --rm -ti -v ${PWD}:/project -v ${PWD}/node_modules:/project/node_modules -v ~/.cache/electron:/root/.cache/electron -v ~/.cache/electron-builder:/root/.cache/electron-builder electronuserland/builder:wine /bin/bash -c \"npm run dist:win\"",
+"d:win": "docker run --rm -ti -e ELECTRON_MIRROR=\"https://registry.npmmirror.com/-/binary/electron/\" -e npm_config_rebuild=false -e npm_config_platform=win32 -e npm_config_arch=x64 -v ${PWD}:/project -v ${PWD}/node_modules:/project/node_modules -v ~/.cache/electron:/root/.cache/electron -v ~/.cache/electron-builder:/root/.cache/electron-builder electronuserland/builder:wine /bin/bash -c \"npm run dist:win\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.1",
+    "electron": "^39.8.8",
+    "electron-builder": "^26.8.1",
+    "wait-on": "^7.0.2"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.9.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
+    "xlsx": "^0.18.5"
+  },
+  "build": {
+    "appId": "com.yourcompany.schoolmanagement",
+    "productName": "مدیریت آموزشگاه",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": "zip",
+      "icon": "build/icon.icns"
+    }
+  }
+}

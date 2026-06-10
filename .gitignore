@@ -1,0 +1,33 @@
+# پوشه‌های سیستمی
+.DS_Store
+Thumbs.db
+
+# وابستگی‌ها
+node_modules/
+renderer/node_modules/
+
+# خروجی build
+dist/
+renderer/dist/
+
+# پشتیبان‌های محلی
+backups/
+
+# فایل‌های لاگ
+*.log
+npm-debug.log*
+
+# فایل‌های مخصوص IDE
+.vscode/
+.idea/
+*.swp
+
+# فایل‌های موقت
+*.tmp
+
+# الکترون دستی (اگر در پروژه باشد)
+electron/
+electron-x64-backup/
+
+# فایل قفل (اختیاری – بسته به سلیقه)
+package-lock.json

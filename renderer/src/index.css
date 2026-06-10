@@ -1,0 +1,685 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Vazir';
+  src: url('/fonts/Vazir.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap; /* باعث بهبود نمایش در حین بارگذاری */
+}
+
+@font-face {
+  font-family: 'Vazir';
+  src: url('/fonts/Vazir-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vazir';
+  src: url('/fonts/Vazir-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+*,
+*::before,
+*::after {
+  font-family: 'Vazir', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+
+body,
+input,
+textarea,
+button,
+select,
+label,
+th,
+td,
+div,
+span,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+a,
+li,
+option,
+.btn,
+.tab,
+.card-item,
+table {
+  font-family: 'Vazir', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+
+
+body {
+  background: #f0f2f5;
+  padding: 20px;
+  direction:  rtl;
+}
+
+.app {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* حالت روشن (پیش‌فرض) */
+:root {
+  --border-color: #ddd;
+  --input-bg: white;
+  --input-text: #333;
+  --popup-bg: white;
+  --select-bg: white;
+  --select-text: #333;
+  --text-color: #333;
+}
+
+/* حالت تاریک – با کلاس dark-mode روی body */
+.dark-mode {
+  --border-color: #475569;
+  --input-bg: #2c3e50;
+  --input-text: #e2e8f0;
+  --popup-bg: #1e293b;
+  --select-bg: #334155;
+  --select-text: #e2e8f0;
+  --text-color: #e2e8f0;
+}
+
+header {
+  background: linear-gradient(135deg, #B39CD0, #611fd4);
+  color: white;
+  padding: 20px 25px;
+  border-radius: 15px;
+  margin-bottom: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.backup-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+}
+.btn.backup { background: #27ae60; color: white; }
+.btn.backup:hover { background: #2ecc71; }
+.btn.restore { background: #e67e22; color: white; }
+.btn.restore:hover { background: #f39c12; }
+.btn.submit { background: #3498db; color: white; padding: 10px 20px; }
+.btn.submit:hover { background: #2980b9; }
+.btn.edit { background: #f1c40f; color: #2c3e50; margin-left: 8px; }
+.btn.delete { background: #e74c3c; color: white; }
+
+.tabs {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 25px;
+  border-bottom: 2px solid #ddd;
+}
+.tab {
+  background: #ecf0f1;
+  border: none;
+  padding: 12px 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 10px 10px 0 0;
+}
+.tab.active {
+  background: #3498db;
+  color: white;
+}
+
+.tab-content {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.form-section, .list-section {
+  margin-bottom: 30px;
+}
+.form-section h2, .list-section h2 {
+  margin-bottom: 20px;
+  color: #2c3e50;
+  border-right: 5px solid #3498db;
+  padding-right: 15px;
+}
+.form-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  margin-top: 8px;
+}
+.form-group {
+  flex: 1;
+  min-width: 180px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+.card-item {
+  background: #f9f9f9;
+  border-right: 4px solid #3498db;
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.card-info p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+.empty-message {
+  text-align: center;
+  color: #7f8c8d;
+  padding: 30px;
+  font-style: italic;
+}
+
+.persian-date-select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: white;
+  font-family: inherit;
+  cursor: pointer;
+}
+.persian-date-select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52,152,219,0.2);
+}
+
+
+
+
+
+
+
+
+
+/* ========== دکمه تغییر تم ========== */
+.header-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.theme-toggle {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.theme-toggle:hover {
+  background: rgba(255,255,255,0.4);
+  transform: scale(1.05);
+}
+
+/* ========== دارک مود ========== */
+.dark-mode {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+.dark-mode .app header {
+  background: linear-gradient(135deg, #0a0f1c, #0f172a);
+}
+
+.dark-mode .tab-content {
+  background: #1e293b;
+
+}
+.dark-mode .btn.backup,
+.dark-mode .btn.restore {
+  color: #e2e8f0;
+}
+.dark-mode .btn.backup:hover {
+  background-color: #3b4a5e;
+}
+.dark-mode .btn.restore:hover {
+  background-color: #4a5a72;
+}
+.dark-mode .tabs .tab {
+  background-color: #1e293b;
+  color: #94a3b8;
+}
+.dark-mode .tabs .tab.active {
+  background-color: #2563eb;
+  color: white;
+}
+.dark-mode .form-section,
+.dark-mode .list-section {
+  background-color: #1e293b;
+}
+.dark-mode .form-section h2,
+.dark-mode .list-section h2 {
+  color: #f1f5f9;
+  border-right-color: #3b82f6;
+}
+.dark-mode .form-group label {
+  color: #cbd5e1;
+}
+.dark-mode .form-group input,
+.dark-mode .form-group select,
+.dark-mode .form-group textarea,
+.dark-mode .persian-date-input,
+.dark-mode .persian-date-select {
+  background-color: #334155 ; 
+  border-color: #475569;
+  color: #f8fafc;
+}
+.dark-mode .form-group input:focus,
+.dark-mode .form-group select:focus,
+.dark-mode .form-group textarea:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96,165,250,0.2);
+}
+.dark-mode .btn.submit {
+  background-color: #3b82f6;
+}
+.dark-mode .btn.submit:hover {
+  background-color: #2563eb;
+}
+.dark-mode .btn.edit {
+  background-color: #d97706;
+  color: white;
+}
+.dark-mode .btn.edit:hover {
+  background-color: #b45309;
+}
+.dark-mode .btn.delete {
+  background-color: #dc2626;
+}
+.dark-mode .btn.delete:hover {
+  background-color: #b91c1c;
+}
+.dark-mode .card-item {
+  background-color: #0f172a;
+  border-right-color: #3b82f6;
+}
+.dark-mode .card-info p {
+  color: #cbd5e6;
+}
+.dark-mode .empty-message {
+  color: #94a3b8;
+}
+.dark-mode table {
+  background-color: #1e293b;
+}
+.dark-mode th {
+  background-color: #0f172a !important;
+  color: #e2e8f0;
+  border-bottom: 2px solid #334155;
+}
+.dark-mode td {
+  border-bottom: 1px solid #334155;
+  color: #cbd5e1;
+}
+.dark-mode tr:hover {
+  background-color: #334155;
+}
+.dark-mode .persian-calendar-custom {
+  background-color: #1e293b;
+  border-color: #475569;
+}
+.dark-mode .react-calendar__navigation button,
+.dark-mode .react-calendar__month-view__weekdays abbr {
+  color: #f1f5f9;
+}
+.dark-mode .react-calendar__tile {
+  background-color: #334155;
+  color: #e2e8f0;
+}
+.dark-mode .react-calendar__tile--active {
+  background-color: #3b82f6 !important;
+}
+.dark-mode .react-calendar__tile--now {
+  background-color: #475569;
+}
+
+
+/* استایل کارت‌های آماری */
+.stats-container {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+  justify-content: space-between;
+   padding-right: 12px;
+  padding-left: 12px;
+  margin-top: 16px;
+}
+.stat-card {
+  flex: 1;
+  min-width: 150px;
+  background: white;
+  border-radius: 15px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: transform 0.2s;
+}
+.stat-card:hover {
+  transform: translateY(-3px);
+}
+.stat-title {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  margin-bottom: 8px;
+}
+.stat-number {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #2c3e50;
+}
+.dark-mode .stat-card {
+  background: #1e293b;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.dark-mode .stat-title {
+  color: #94a3b8;
+}
+.dark-mode .stat-number {
+  color: #f1f5f9;
+}
+
+
+.stats-wrapper {
+  margin-bottom: 20px;
+  background: white;
+  border-radius: 12px;
+ 
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #f8f9fa;
+  cursor: pointer;
+  user-select: none;
+  
+}
+.stats-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+.stats-toggle {
+  font-size: 1.2rem;
+  transition: transform 0.2s;
+} 
+.dark-mode .stats-wrapper {
+  background: #1e293b;
+}
+.dark-mode .stats-header {
+  background: #0f172a;
+}
+.dark-mode .stats-header h3 {
+  color: #e2e8f0;
+}
+
+.dark-mode .react-select__control {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+}
+.dark-mode .react-select__single-value {
+  color: #e2e8f0 !important;
+}
+.dark-mode .react-select__menu {
+  background-color: #1e293b !important;
+}
+.dark-mode .react-select__option--is-focused {
+  background-color: #334155 !important;
+    color: white !important;
+
+}
+.dark-mode .react-select__option--is-selected {
+  background-color: #3498db !important;
+}
+
+
+
+
+
+/* صفحه ورود */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f0f2f5;
+}
+
+.login-box {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-box h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+}
+
+.login-box .form-group {
+  margin-bottom: 1rem;
+}
+
+.login-box .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.login-box .form-group input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.login-box .error {
+  color: #e74c3c;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.dark-mode .login-container {
+  background: #121212;
+}
+
+.dark-mode .login-box {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+.dark-mode .login-box h2 {
+  color: #f1f5f9;
+}
+
+.dark-mode .login-box .form-group input {
+  background: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+/* کارت جمع‌بندی زیبا */
+.summary-card {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border-radius: 20px;
+  padding: 20px 28px;
+  margin-top: 24px;
+  text-align: center;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
+  transition: all 0.2s ease;
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.02);
+}
+
+.summary-card p {
+  margin: 10px 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.summary-card p:first-child {
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  display: inline-block;
+  padding-bottom: 6px;
+  margin-bottom: 14px;
+  border-bottom: 2px solid #2563eb;
+}
+
+/* دارک مود */
+.dark-mode .summary-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-color: #334155;
+}
+.dark-mode .summary-card p {
+  color: #e2e8f0;
+}
+.dark-mode .summary-card p:first-child {
+  border-bottom-color: #3b82f6;
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+/* جدول نتایج با عرض ثابت و یکسان */
+.results-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  direction: rtl;
+  background-color: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.results-table th,
+.results-table td {
+  padding: 12px 8px;
+  text-align: center;
+  vertical-align: middle;
+  word-break: break-word;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* تعیین عرض درصدی ستون‌ها (برای کلاس‌ها، پرداخت‌ها و هزینه‌ها یکسان است) */
+.results-table th:nth-child(1) { width: 20%; }  /* نام استاد / پرداخت کننده / دریافت کننده */
+.results-table th:nth-child(2) { width: 12%; }   /* روز */
+.results-table th:nth-child(3) { width: 10%; }  /* تاریخ */
+.results-table th:nth-child(4) { width: 10%; }  /* ساعت شروع / مبلغ */
+.results-table th:nth-child(5) { width: 10%; }  /* ساعت پایان / بابت / موضوع */
+.results-table th:nth-child(6) { width: 10%; }  /* تعداد دانشجو / نوع پرداخت */
+.results-table th:nth-child(7) { width: 15%; }  /* توضیحات */
+
+/* حذف border-bottom از آخرین ردیف */
+.results-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* هاور ردیف */
+.results-table tbody tr:hover {
+  background-color: #f1f5f9;
+  transition: 0.2s;
+}
+
+/* دارک مود */
+.dark-mode .results-table {
+  background-color: #1e293b;
+}
+.dark-mode .results-table th,
+.dark-mode .results-table td {
+  border-bottom-color: #334155;
+  color: #e2e8f0;
+}
+.dark-mode .results-table tbody tr:hover {
+  background-color: #334155;
+}
+
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  direction: rtl;
+}
+.results-table th,
+.results-table td {
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+.results-table th {
+  background-color: #f1f5f9;
+  font-weight: bold;
+}
+.dark-mode .results-table th {
+  background-color: #1e293b;
+  color: #e2e8f0;
+}
+.dark-mode .results-table td {
+  border-color: #334155;
+}
+
