@@ -7,6 +7,7 @@ import { isValidJalaliDate } from '../utils/dateUtils';
 import PersianTimePicker from './PersianTimePicker';
 import Select from 'react-select';
 import { getWeekdayFromJalali } from '../utils/dateUtils';
+import moment from 'moment-jalaali';
 
 const Classrooms = () => {
   const [classrooms, setClassrooms] = useState([]);
@@ -50,6 +51,11 @@ const Classrooms = () => {
 }, [form.date]);
 
   const validateForm = () => {
+    const today = moment().format('jYYYY-jMM-jDD');
+if (form.date > today) {
+  alert('امکان ثبت کلاس برای تاریخ‌های آینده وجود ندارد. لطفاً تاریخ امروز یا گذشته را انتخاب کنید.');
+  return false;
+}
     if (!form.day) { alert('لطفاً روز را انتخاب کنید'); return false; }
     if (!form.date || !isValidJalaliDate(form.date)) { alert('تاریخ شمسی معتبر نیست (فرمت: ۱۴۰۳-۰۲-۰۵)'); return false; }
     if (!form.teacher_name) { alert('لطفاً استاد را انتخاب کنید'); return false; }
