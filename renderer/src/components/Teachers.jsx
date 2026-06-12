@@ -6,7 +6,7 @@ import { isValidJalaliDate } from '../utils/dateUtils';
 
 const Teachers = () => {
   const [teachers, setTeachers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');    // ← جستجوی زنده
+  const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState({
     first_name: '', last_name: '', national_code: '', father_name: '', birth_date: '',
     birth_place_issue: '', birth_place: '', mobile: '', virtual_space: '', degree: '',
@@ -29,33 +29,75 @@ const Teachers = () => {
     return !all.some(t => t.national_code === code && t.id !== currentId);
   };
 
+  // همگام‌سازی با دفتر تلفن (ثبت/به‌روزرسانی مخاطب بر اساس شماره موبایل)
+const syncToPhonebook = async () => {
+  // اگر حداقل یکی از شماره‌ها وجود نداشته باشد، همگام‌سازی را انجام نده
+  if (!form.mobile && !form.virtual_space) return;
+
+  try {
+    const phonebook = await window.api.getPhonebook();
+    // اولویت جستجو با شماره موبایل است (به عنوان کلید اصلی)
+    let existing = null;
+    if (form.mobile) {
+      existing = phonebook.find(contact => contact.mobile === form.mobile);
+    }
+
+    const newEntry = {
+      first_name: form.first_name,
+      last_name: form.last_name,
+      mobile: form.mobile || '',
+      virtual_mobile: form.virtual_space || '',
+      landline: '',
+      description: 'ثبت خودکار از اطلاعات استاد'
+    };
+
+    if (existing) {
+      // به‌روزرسانی مخاطب موجود (نام، نام خانوادگی و virtual_mobile)
+      const updated = {
+        ...existing,
+        first_name: form.first_name,
+        last_name: form.last_name,
+        virtual_mobile: form.virtual_space || existing.virtual_mobile
+      };
+      await window.api.updatePhonebook(existing.id, updated);
+    } else {
+      // ایجاد مخاطب جدید
+      await window.api.addPhonebook(newEntry);
+    }
+  } catch (err) {
+    console.error('خطا در همگام‌سازی با دفتر تلفن:', err);
+  }
+};
   // اعتبارسنجی فرم
   const validateForm = async () => {
     if (!form.first_name.trim()) { alert('نام را وارد کنید'); return false; }
     if (!form.last_name.trim()) { alert('نام خانوادگی را وارد کنید'); return false; }
-    if (form.mobile && !/^09\d{9}$/.test(form.mobile)) { alert('شماره موبایل باید با 09 شروع و 11 رقم باشد'); return false; }
-
+    const mobileEng = toEnglishDigits(form.mobile);
+    if (mobileEng && !/^09\d{9}$/.test(mobileEng)) {
+      alert('شماره موبایل باید با 09 شروع و 11 رقم باشد');
+      return false;
+    }
+    const virtualEng = toEnglishDigits(form.virtual_space);
+    if (virtualEng && !/^09\d{9}$/.test(virtualEng)) {
+      alert('شماره فضای مجازی باید با 09 شروع و 11 رقم باشد');
+      return false;
+    }
     if (form.national_code && form.national_code.length !== 10) {
-  alert('کد ملی باید ۱۰ رقم باشد');
-  return false;
-}
-
-      if (form.mobile && !/^09\d{9}$/.test(form.mobile)) {
-    alert('شماره موبایل باید با 09 شروع و 11 رقم باشد');
-    return false;
-  }
-
-   if (form.virtual_space && !/^09\d{9}$/.test(form.virtual_space)) {
-    alert('شماره فضای مجازی باید با 09 شروع و 11 رقم باشد');
-    return false;
-  }
-    if (form.national_code && form.national_code.length !== 10) { alert('کد ملی باید 10 رقم باشد'); return false; }
+      alert('کد ملی باید ۱۰ رقم باشد');
+      return false;
+    }
     if (form.national_code && !(await isNationalCodeUnique(form.national_code, editId))) {
       alert('این کد ملی قبلاً ثبت شده است');
       return false;
     }
-    if (form.bank_card && !/^\d{16}$/.test(form.bank_card)) { alert('شماره کارت باید 16 رقم باشد'); return false; }
-    if (form.birth_date && !isValidJalaliDate(form.birth_date)) { alert('تاریخ تولد شمسی معتبر نیست'); return false; }
+    if (form.bank_card && !/^\d{16}$/.test(form.bank_card)) {
+      alert('شماره کارت باید 16 رقم باشد');
+      return false;
+    }
+    if (form.birth_date && !isValidJalaliDate(form.birth_date)) {
+      alert('تاریخ تولد شمسی معتبر نیست');
+      return false;
+    }
     return true;
   };
 
@@ -64,54 +106,51 @@ const Teachers = () => {
     let processedValue = value;
 
     if (name === 'national_code') {
-  let val = toEnglishDigits(value).replace(/\D/g, '');
-  if (val.length > 10) val = val.slice(0, 10);
-  setForm({ ...form, national_code: val });
-  return;
-}
-    
- if (name === 'mobile' || name === 'virtual_space') {
-  const englishValue = toEnglishDigits(value);
-  if (englishValue === '' || /^\d*$/.test(englishValue)) {
-    setForm({ ...form, [name]: englishValue });
-  }
-}
-
-if (name === 'mobile') {
-  let val = toEnglishDigits(value).replace(/\D/g, '');
-  if (val.length > 11) val = val.slice(0, 11);
-  setForm({ ...form, mobile: val });
-  return;
-}
-if (name === 'virtual_space') {
-  let val = toEnglishDigits(value).replace(/\D/g, '');
-  if (val.length > 11) val = val.slice(0, 11);
-  setForm({ ...form, virtual_space: val });
-  return;
-}
-
-    if (['national_code', 'mobile', 'virtual_space', 'bank_account', 'bank_card'].includes(name)) {
-      processedValue = toEnglishDigits(value);
-      if (processedValue !== '' && !/^\d*$/.test(processedValue)) return;
+      let val = toEnglishDigits(value).replace(/\D/g, '');
+      if (val.length > 10) val = val.slice(0, 10);
+      setForm({ ...form, national_code: val });
+      return;
+    }
+    if (name === 'mobile') {
+      let val = toEnglishDigits(value).replace(/\D/g, '');
+      if (val.length > 11) val = val.slice(0, 11);
+      setForm({ ...form, mobile: val });
+      return;
+    }
+    if (name === 'virtual_space') {
+      let val = toEnglishDigits(value).replace(/\D/g, '');
+      if (val.length > 11) val = val.slice(0, 11);
+      setForm({ ...form, virtual_space: val });
+      return;
+    }
+    if (['bank_account', 'bank_card'].includes(name)) {
+      processedValue = toEnglishDigits(value).replace(/\D/g, '');
+      setForm({ ...form, [name]: processedValue });
+      return;
     }
     setForm({ ...form, [name]: processedValue });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!(await validateForm())) return;   // ← اعتبارسنجی قبل از ارسال
+    if (!(await validateForm())) return;
+
     if (editId) {
       await window.api.updateTeacher(editId, form);
-      setEditId(null);
     } else {
       await window.api.addTeacher(form);
     }
+
+    // همگام‌سازی با دفتر تلفن (بعد از موفقیت در ثبت/ویرایش)
+    await syncToPhonebook();
+
     setForm({
       first_name: '', last_name: '', national_code: '', father_name: '', birth_date: '',
       birth_place_issue: '', birth_place: '', mobile: '', virtual_space: '', degree: '',
       field_of_study: '', home_address: '', work_address: '', work_experience: '',
       bank_account: '', bank_card: ''
     });
+    setEditId(null);
     load();
   };
 
@@ -123,6 +162,7 @@ if (name === 'virtual_space') {
   const handleDelete = async (id) => {
     if (confirm('حذف شود؟')) {
       await window.api.deleteTeacher(id);
+      // (اختیاری) مخاطب دفتر تلفن هم حذف شود؟ بنا به درخواست کارفرما، فعلاً نه.
       load();
     }
   };
@@ -167,7 +207,7 @@ if (name === 'virtual_space') {
           </div>
           <div className="form-row">
             <div className="form-group"><label>نام پدر</label><input name="father_name" value={form.father_name} onChange={handleChange} /></div>
-            <div className="form-group"><label>تاریخ تولد </label>
+            <div className="form-group"><label>تاریخ تولد</label>
               <PersianDatePicker value={form.birth_date} onChange={(val) => setForm({ ...form, birth_date: val })} start={"1300-01-01"} />
             </div>
             <div className="form-group"><label>محل صدور</label><input name="birth_place_issue" value={form.birth_place_issue} onChange={handleChange} /></div>
@@ -179,17 +219,17 @@ if (name === 'virtual_space') {
           </div>
           <div className="form-row">
             <div className="form-group">
-  <label>مدرک تحصیلی</label>
-  <select name="degree" value={form.degree} onChange={handleChange}>
-    <option value="">انتخاب کنید</option>
-    <option value="دیپلم">دیپلم</option>
-    <option value="فوق دیپلم">فوق دیپلم</option>
-    <option value="لیسانس">لیسانس</option>
-    <option value="فوق لیسانس">فوق لیسانس</option>
-    <option value="دکتری">دکتری</option>
-    <option value="حوزوی">حوزوی</option>
-  </select>
-</div>
+              <label>مدرک تحصیلی</label>
+              <select name="degree" value={form.degree} onChange={handleChange}>
+                <option value="">انتخاب کنید</option>
+                <option value="دیپلم">دیپلم</option>
+                <option value="فوق دیپلم">فوق دیپلم</option>
+                <option value="لیسانس">لیسانس</option>
+                <option value="فوق لیسانس">فوق لیسانس</option>
+                <option value="دکتری">دکتری</option>
+                <option value="حوزوی">حوزوی</option>
+              </select>
+            </div>
             <div className="form-group"><label>رشته تحصیلی</label><input name="field_of_study" value={form.field_of_study} onChange={handleChange} /></div>
           </div>
           <div className="form-row">
@@ -206,7 +246,6 @@ if (name === 'virtual_space') {
 
       <div className="list-section">
         <h2>لیست اساتید و کارکنان</h2>
-        {/* نوار جستجو */}
         <input
           type="text"
           placeholder="🔍 جستجو در جدول (نام، نام خانوادگی، کد ملی، موبایل، ...)"
@@ -220,7 +259,7 @@ if (name === 'virtual_space') {
             <table style={{ width: '100%', borderCollapse: 'collapse', direction: 'rtl' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #ddd' }}>
-                      <th style={{ width: '5%', textAlign: 'center' }}>#</th>
+                  <th style={{ width: '5%', textAlign: 'center' }}>#</th>
                   <th onClick={() => requestSort('first_name')} style={{ cursor: 'pointer', padding: '10px', textAlign: 'right' }}>نام {getSortIndicator('first_name')}</th>
                   <th onClick={() => requestSort('last_name')} style={{ cursor: 'pointer', padding: '10px', textAlign: 'right' }}>نام خانوادگی {getSortIndicator('last_name')}</th>
                   <th onClick={() => requestSort('national_code')} style={{ cursor: 'pointer', padding: '10px', textAlign: 'right' }}>کد ملی {getSortIndicator('national_code')}</th>
@@ -233,10 +272,9 @@ if (name === 'virtual_space') {
                 </tr>
               </thead>
               <tbody>
-                {filteredTeachers.map((item,idx) => (
+                {filteredTeachers.map((item, idx) => (
                   <tr key={item.id} style={{ borderBottom: '1px solid #eee' }}>
-                          <td style={{ textAlign: 'center' }}>{toPersianDigits(idx + 1)}</td>
-
+                    <td style={{ textAlign: 'center' }}>{toPersianDigits(idx + 1)}</td>
                     <td style={{ padding: '10px' }}>{item.first_name}</td>
                     <td style={{ padding: '10px' }}>{item.last_name}</td>
                     <td style={{ padding: '10px' }}>{toPersianDigits(item.national_code)}</td>
