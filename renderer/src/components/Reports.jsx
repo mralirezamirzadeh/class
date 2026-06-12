@@ -583,7 +583,7 @@ const Reports = () => {
                   <tr key={idx}>
                     {reportType === 'class' && (
                       <>
-                        <td style={{ textAlign: 'center' }}>{toPersianDigits(item.id) || toPersianDigits(idx + 1)}</td>
+<td style={{ textAlign: 'center' }}>{toPersianDigits(idx + 1)}</td>
                         <td>{item.teacher_name}</td>
                         <td>{item.day}</td>
                         <td>{item.date}</td>
@@ -595,7 +595,7 @@ const Reports = () => {
                     )}
                     {reportType === 'payment' && (
                       <>
-                        <td style={{ textAlign: 'center' }}>{toPersianDigits(item.id) || toPersianDigits(idx + 1)}</td>
+<td style={{ textAlign: 'center' }}>{toPersianDigits(idx + 1)}</td>
                         <td>{item.payer_name}</td>
                         <td>{item.day}</td>
                         <td>{item.date}</td>
@@ -607,7 +607,7 @@ const Reports = () => {
                     )}
                     {reportType === 'expense' && (
                       <>
-                        <td style={{ textAlign: 'center' }}>{toPersianDigits(item.id) || toPersianDigits(idx + 1)}</td>
+<td style={{ textAlign: 'center' }}>{toPersianDigits(idx + 1)}</td>
                         <td>{item.receiver_name}</td>
                         <td>{item.day}</td>
                         <td>{item.date}</td>

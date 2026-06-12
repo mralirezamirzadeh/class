@@ -683,3 +683,36 @@ header {
   border-color: #334155;
 }
 
+
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  direction: ltr;
+}
+.pagination button {
+  padding: 6px 14px;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #374151;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.pagination button:hover:not(:disabled) {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+.pagination button:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+.pagination span {
+  font-size: 14px;
+  color: #4b5563;
+}

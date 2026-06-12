@@ -20,7 +20,13 @@ const Classrooms = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [editId, setEditId] = useState(null);
-  const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'asc' });
+  // const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+
 
   const load = async () => {
     const [classData, teacherData] = await Promise.all([
@@ -50,8 +56,8 @@ const Classrooms = () => {
     if (!form.start_time) { alert('ساعت شروع را وارد کنید'); return false; }
     if (!form.end_time) { alert('ساعت پایان را وارد کنید'); return false; }
     if (form.start_time >= form.end_time) { alert('ساعت پایان باید بعد از ساعت شروع باشد'); return false; }
-    const studentCount = parseInt(form.student_count);
-    if (isNaN(studentCount) || studentCount < 0) { alert('تعداد دانشجویان باید عددی مثبت باشد'); return false; }
+    // const studentCount = parseInt(form.student_count);
+    // if (isNaN(studentCount) || studentCount < 0) { alert('تعداد دانشجویان باید عددی مثبت باشد'); return false; }
     return true;
   };
 
@@ -165,6 +171,14 @@ const sortedClassrooms = [...classrooms].sort((a, b) => {
     )
   );
 
+
+  const totalPages = Math.ceil(filteredClassrooms.length / itemsPerPage);
+    const paginatedClassrooms = filteredClassrooms.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+
+
   const requestSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
@@ -172,6 +186,8 @@ const sortedClassrooms = [...classrooms].sort((a, b) => {
   };
 
   const getSortIndicator = (key) => (sortConfig.key === key ? (sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽') : '');
+
+  
 
   return (
     <div>
@@ -300,7 +316,15 @@ const sortedClassrooms = [...classrooms].sort((a, b) => {
             </div>
             <div className="form-group">
               <label>مقطع</label>
-              <input name="grade" value={form.grade} onChange={handleChange} />
+              <select name="grade" value={form.grade} onChange={handleChange}>
+                <option value="">انتخاب کنید</option>
+                <option value="دبستان">دبستان</option>
+                <option value="متوسطه1">متوسطه1</option>
+                <option value="متوسطه2">متوسطه2</option>
+                <option value="دانشگاه">دانشگاه</option>
+                <option value="کودک">کودک</option>
+                <option value="آزاد">آزاد</option>
+              </select>
             </div>
             <div className="form-group">
               <label>جنسیت</label>
@@ -368,7 +392,7 @@ const sortedClassrooms = [...classrooms].sort((a, b) => {
   </tr>
 </thead>
               <tbody>
-                {filteredClassrooms.map((item,idx) => (
+                {paginatedClassrooms.map((item,idx) => (
                   <tr key={item.id} style={{ borderBottom: '1px solid #eee' }}>
                           <td style={{ textAlign: 'center' }}>{toPersianDigits(idx + 1)}</td>
 
@@ -393,6 +417,56 @@ const sortedClassrooms = [...classrooms].sort((a, b) => {
                 ))}
               </tbody>
             </table>
+       <div style={{ 
+  display: 'flex', 
+  justifyContent: 'center', 
+  alignItems: 'center', 
+  gap: '15px', 
+  marginTop: '25px',
+  direction: 'ltr' 
+}}>
+
+  <button
+    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+    disabled={currentPage === totalPages}
+    style={{
+      padding: '6px 14px',
+      backgroundColor: currentPage === totalPages ? '#f3f4f6' : '#ffffff',
+      border: '1px solid #d1d5db',
+      borderRadius: '6px',
+      cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+      color: currentPage === totalPages ? '#9ca3af' : '#374151',
+      fontSize: '14px',
+      transition: 'all 0.2s'
+    }}
+  >
+    بعدی
+  </button>
+ 
+  
+  <span style={{ fontSize: '14px', color: '#4b5563' }}>
+    صفحه {currentPage} از {totalPages}
+  </span>
+  
+  
+
+   <button
+    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+    disabled={currentPage === 1}
+    style={{
+      padding: '6px 14px',
+      backgroundColor: currentPage === 1 ? '#f3f4f6' : '#ffffff',
+      border: '1px solid #d1d5db',
+      borderRadius: '6px',
+      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+      color: currentPage === 1 ? '#9ca3af' : '#374151',
+      fontSize: '14px',
+      transition: 'all 0.2s'
+    }}
+  >
+    قبلی
+  </button>
+</div>
           </div>
         )}
       </div>
