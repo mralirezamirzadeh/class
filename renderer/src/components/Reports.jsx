@@ -338,8 +338,8 @@ const Reports = () => {
     tempDiv.innerHTML = htmlContent;
 
     try {
-      const canvas = await html2canvas(tempDiv, { scale: 2, logging: false, backgroundColor: '#ffffff' });
-      const imgData = canvas.toDataURL('image/png');
+      const canvas = await html2canvas(tempDiv, { scale: 1, logging: false, backgroundColor: '#ffffff' });
+const imgData = canvas.toDataURL('image/jpeg', 0.9);
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
       const imgWidth = 280;
       const pageHeight = 210;
