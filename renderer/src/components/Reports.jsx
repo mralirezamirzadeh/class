@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import html2pdf from 'html2pdf.js';
 import PersianDatePicker from './PersianDatePicker';
 import Select from 'react-select';
 import PersianNumberInput from './PersianNumberInput';
 import { toPersianDigits, toEnglishDigits } from '../utils/numberUtils';
-
 
 const Reports = () => {
   const [classrooms, setClassrooms] = useState([]);
@@ -24,11 +24,10 @@ const Reports = () => {
     classDay: '',
     expenseSubject: '',
     phonebookSearch: '',
-      descriptionSearch: '' ,
-        studentCount: ''  
+    descriptionSearch: '',
+    studentCount: ''
   });
   const [filteredData, setFilteredData] = useState([]);
-  // ---------- state مرتب‌سازی (sort) ----------
   const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
 
   // بارگذاری داده‌ها
@@ -68,12 +67,12 @@ const Reports = () => {
     if (reportType === 'class') {
       if (filters.teacherId) data = data.filter(item => item.teacher_name === filters.teacherId);
       if (filters.classDay) data = data.filter(item => item.day === filters.classDay);
-     if (filters.studentCount !== '') {
-  const count = parseInt(toEnglishDigits(filters.studentCount), 10);
-  if (!isNaN(count)) {
-    data = data.filter(item => item.student_count === count);
-  }
-}
+      if (filters.studentCount !== '') {
+        const count = parseInt(toEnglishDigits(filters.studentCount), 10);
+        if (!isNaN(count)) {
+          data = data.filter(item => item.student_count === count);
+        }
+      }
     } else if (reportType === 'payment') {
       if (filters.paymentType) data = data.filter(item => item.payment_type === filters.paymentType);
     } else if (reportType === 'expense') {
@@ -89,12 +88,13 @@ const Reports = () => {
         );
       }
     }
+
     if (filters.descriptionSearch) {
-  const term = filters.descriptionSearch.toLowerCase();
-  data = data.filter(item =>
-    item.description && item.description.toLowerCase().includes(term)
-  );
-}
+      const term = filters.descriptionSearch.toLowerCase();
+      data = data.filter(item =>
+        item.description && item.description.toLowerCase().includes(term)
+      );
+    }
 
     setFilteredData(data);
   };
@@ -152,21 +152,49 @@ const Reports = () => {
 
   const sortedData = getSortedData();
 
-  // ---------- خروجی Excel ----------
+  // ========== خروجی Excel با ستون شماره ردیف ==========
   const exportToExcel = () => {
     if (filteredData.length === 0) return alert('داده‌ای برای خروجی وجود ندارد.');
     let headers, rows;
+
     if (reportType === 'class') {
-      headers = ['نام استاد', 'روز', 'تاریخ', 'ساعت شروع', 'ساعت پایان', 'تعداد دانشجو', 'توضیحات'];
-      rows = filteredData.map(c => [c.teacher_name, c.day, c.date, c.start_time, c.end_time, toPersianDigits(c.student_count), c.description || '']);
+      headers = ['#', 'نام استاد', 'روز', 'تاریخ', 'ساعت شروع', 'ساعت پایان', 'تعداد دانشجو', 'توضیحات'];
+      rows = filteredData.map((c, idx) => [
+        idx + 1,
+        c.teacher_name,
+        c.day,
+        c.date,
+        c.start_time,
+        c.end_time,
+        toPersianDigits(c.student_count),
+        c.description || ''
+      ]);
     } else if (reportType === 'payment') {
-      headers = ['پرداخت کننده', 'روز', 'تاریخ', 'مبلغ (تومان)', 'بابت', 'نوع پرداخت', 'توضیحات'];
-      rows = filteredData.map(p => [p.payer_name, p.day, p.date, toPersianDigits((p.amount || 0).toLocaleString()), p.for_what, p.payment_type, p.description || '']);
+      headers = ['#', 'پرداخت کننده', 'روز', 'تاریخ', 'مبلغ (تومان)', 'بابت', 'نوع پرداخت', 'توضیحات'];
+      rows = filteredData.map((p, idx) => [
+        idx + 1,
+        p.payer_name,
+        p.day,
+        p.date,
+        toPersianDigits((p.amount || 0).toLocaleString()),
+        p.for_what,
+        p.payment_type,
+        p.description || ''
+      ]);
     } else if (reportType === 'expense') {
-      headers = ['دریافت کننده', 'روز', 'تاریخ', 'مبلغ (تومان)', 'موضوع', 'نوع پرداخت', 'توضیحات'];
-      rows = filteredData.map(e => [e.receiver_name, e.day, e.date, toPersianDigits((e.amount || 0).toLocaleString()), e.subject, e.payment_type, e.description || '']);
+      headers = ['#', 'دریافت کننده', 'روز', 'تاریخ', 'مبلغ (تومان)', 'موضوع', 'نوع پرداخت', 'توضیحات'];
+      rows = filteredData.map((e, idx) => [
+        idx + 1,
+        e.receiver_name,
+        e.day,
+        e.date,
+        toPersianDigits((e.amount || 0).toLocaleString()),
+        e.subject,
+        e.payment_type,
+        e.description || ''
+      ]);
     } else { // phonebook
-      headers = ['ردیف', 'نام', 'نام خانوادگی', 'موبایل', 'موبایل فضای مجازی', 'تلفن ثابت', 'توضیحات'];
+      headers = ['#', 'نام', 'نام خانوادگی', 'موبایل', 'موبایل فضای مجازی', 'تلفن ثابت', 'توضیحات'];
       rows = filteredData.map((item, idx) => [
         idx + 1,
         item.first_name,
@@ -177,6 +205,7 @@ const Reports = () => {
         item.description || ''
       ]);
     }
+
     const summary = getSummary();
     if (summary && reportType !== 'phonebook') {
       rows.push(['', '', '', '', '', '', '']);
@@ -189,196 +218,258 @@ const Reports = () => {
       rows.push(['', '', '', '', '', '', '']);
       rows.push(['جمع کل', '', '', '', `تعداد کل مخاطبین: ${summary.count}`, '', '']);
     }
+
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, reportType === 'class' ? 'کلاس‌ها' : (reportType === 'payment' ? 'پرداخت‌ها' : (reportType === 'expense' ? 'هزینه‌ها' : 'دفتر تلفن')));
     XLSX.writeFile(wb, `${reportType}_report.xlsx`);
   };
 
-  const exportToPDF = async () => {
-    if (filteredData.length === 0) return alert('داده‌ای برای خروجی وجود ندارد.');
-    const tempDiv = document.createElement('div');
-    tempDiv.style.direction = 'rtl';
-    tempDiv.style.fontFamily = 'Vazir, "Segoe UI", Tahoma, sans-serif';
-    tempDiv.style.padding = '20px';
-    tempDiv.style.backgroundColor = 'white';
-    tempDiv.style.width = '1100px';
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.top = '-9999px';
-    tempDiv.style.left = '-9999px';
-    document.body.appendChild(tempDiv);
+  // ========== خروجی PDF (با html2pdf.js برای صفحه‌بندی اصولی) ==========
+// ========== خروجی PDF با کیفیت بالا و نمایش کامل توضیحات ==========
+// ========== خروجی PDF با کیفیت بالا و نمایش کامل توضیحات ==========
+// ========== خروجی PDF با کیفیت بالا و نمایش کامل توضیحات ==========
+// ========== خروجی PDF با کیفیت بالا و نمایش کامل توضیحات ==========
+// ========== خروجی PDF با کیفیت بالا و نمایش کامل توضیحات ==========
+const exportToPDF = () => {
+  if (filteredData.length === 0) return alert('داده‌ای برای خروجی وجود ندارد.');
 
-    const title = 
-      reportType === 'class' ? 'گزارش کلاس‌های درس' :
-      reportType === 'payment' ? 'گزارش پرداخت‌ها (شهریه)' :
-      reportType === 'expense' ? 'گزارش هزینه‌ها' :
-      'دفتر تلفن';
+  const tempDiv = document.createElement('div');
+  tempDiv.style.direction = 'rtl';
+  tempDiv.style.fontFamily = 'Vazir, "Segoe UI", Tahoma, sans-serif';
+  tempDiv.style.padding = '15px 15px 25px 15px';
+  tempDiv.style.backgroundColor = 'white';
+  tempDiv.style.width = '1100px';  // افزایش عرض
+  tempDiv.style.fontSize = '12px';
+  tempDiv.style.overflow = 'visible';
+  document.body.appendChild(tempDiv);
 
-    let htmlContent = `
-      <h2 style="text-align:center; margin-bottom:8px;">${title}</h2>
-      <p style="text-align:center; color:#555; margin-bottom:20px;">تاریخ تهیه: ${new Date().toLocaleDateString('fa-IR')}</p>
-      <table style="width:100%; border-collapse:collapse; direction:rtl; font-family:inherit;">
-        <thead>
-          <tr>
+  const title =
+    reportType === 'class' ? 'گزارش کلاس‌های درس' :
+    reportType === 'payment' ? 'گزارش پرداخت‌ها (شهریه)' :
+    reportType === 'expense' ? 'گزارش هزینه‌ها' :
+    'دفتر تلفن';
+
+  let htmlContent = `
+    <h2 style="text-align:center; margin-bottom:6px; font-size:16px;">${title}</h2>
+    <p style="text-align:center; color:#555; margin-bottom:15px; font-size:12px;">تاریخ تهیه: ${new Date().toLocaleDateString('fa-IR')}</p>
+    <table style="width:100%; border-collapse:collapse; direction:rtl; font-size:11px; table-layout:auto;">
+      <thead>
+        <tr>
+  `;
+
+  // ========== هدرها ==========
+  if (reportType === 'class') {
+    htmlContent += `
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:5%;">#</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:14%;">نام استاد</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:8%;">روز</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:10%;">تاریخ</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:8%;">ساعت شروع</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:8%;">ساعت پایان</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:8%;">تعداد</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:39%;">توضیحات</th>
     `;
+  } else if (reportType === 'payment') {
+    htmlContent += `
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:5%;">#</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:14%;">پرداخت کننده</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:8%;">روز</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:10%;">تاریخ</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:12%;">مبلغ (تومان)</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:10%;">بابت</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:10%;">نوع پرداخت</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:31%;">توضیحات</th>
+    `;
+  } else if (reportType === 'expense') {
+    htmlContent += `
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:5%;">#</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:14%;">دریافت کننده</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:8%;">روز</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:10%;">تاریخ</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:12%;">مبلغ (تومان)</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:10%;">موضوع</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:10%;">نوع پرداخت</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:31%;">توضیحات</th>
+    `;
+  } else { // phonebook
+    htmlContent += `
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:5%;">#</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:14%;">نام</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:14%;">نام خانوادگی</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:11%;">موبایل</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:11%;">موبایل مجازی</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:11%;">تلفن ثابت</th>
+      <th style="background-color:#3498db; color:white; padding:6px 8px; border:1px solid #ccc; text-align:center; width:34%;">توضیحات</th>
+    `;
+  }
+  htmlContent += `</thead><tbody>`;
 
+  // ========== ردیف‌های داده ==========
+  filteredData.forEach((item, idx) => {
+    htmlContent += '<tr>';
     if (reportType === 'class') {
       htmlContent += `
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">نام استاد</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">روز</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">تاریخ</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">ساعت شروع</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">ساعت پایان</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">تعداد دانشجو</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">توضیحات</th>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px;">${toPersianDigits(idx + 1)}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:right; font-size:10px;">${item.teacher_name}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px;">${item.day}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px; white-space:nowrap;">${item.date}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px;">${item.start_time}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px;">${item.end_time}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px;">${toPersianDigits(item.student_count)}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:right; font-size:10px; word-break:break-word; white-space:normal; min-height:25px; line-height:1.4;">${item.description || ''}</td>
       `;
     } else if (reportType === 'payment') {
       htmlContent += `
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">پرداخت کننده</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">روز</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">تاریخ</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">مبلغ (تومان)</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">بابت</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">نوع پرداخت</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">توضیحات</th>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px;">${toPersianDigits(idx + 1)}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:right; font-size:10px;">${item.payer_name}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px;">${item.day}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px; white-space:nowrap;">${item.date}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:right; font-size:10px;">${toPersianDigits((item.amount || 0).toLocaleString())}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:right; font-size:10px;">${item.for_what}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px;">${item.payment_type}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:right; font-size:10px; word-break:break-word; white-space:normal; min-height:25px; line-height:1.4;">${item.description || ''}</td>
       `;
     } else if (reportType === 'expense') {
       htmlContent += `
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">دریافت کننده</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">روز</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">تاریخ</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">مبلغ (تومان)</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">موضوع</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">نوع پرداخت</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">توضیحات</th>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px;">${toPersianDigits(idx + 1)}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:right; font-size:10px;">${item.receiver_name}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px;">${item.day}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px; white-space:nowrap;">${item.date}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:right; font-size:10px;">${toPersianDigits((item.amount || 0).toLocaleString())}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:right; font-size:10px;">${item.subject}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px;">${item.payment_type}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:right; font-size:10px; word-break:break-word; white-space:normal; min-height:25px; line-height:1.4;">${item.description || ''}</td>
+      `;
+    } else { // phonebook
+      htmlContent += `
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; font-size:10px;">${toPersianDigits(idx + 1)}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:right; font-size:10px;">${item.first_name}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:right; font-size:10px;">${item.last_name}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:left; font-size:10px;">${toPersianDigits(item.mobile || '')}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:left; font-size:10px;">${toPersianDigits(item.virtual_mobile || '')}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:left; font-size:10px;">${toPersianDigits(item.landline || '')}</td>
+        <td style="padding:5px 6px; border:1px solid #ddd; text-align:right; font-size:10px; word-break:break-word; white-space:normal; min-height:25px; line-height:1.4;">${item.description || '-'}</td>
+      `;
+    }
+    htmlContent += '</tr>';
+  });
+
+  // ========== ردیف جمع ==========
+  const summary = getSummary();
+  if (summary) {
+    htmlContent += '<tr style="background-color:#f0f0f0; font-weight:bold;">';
+    if (reportType === 'class') {
+      htmlContent += `
+        <td colspan="6" style="padding:6px 8px; border:1px solid #ddd; text-align:left; font-size:10px;">جمع کل</td>
+        <td style="padding:6px 8px; border:1px solid #ddd; text-align:center; font-size:10px;">تعداد: ${summary.count}</td>
+        <td style="padding:6px 8px; border:1px solid #ddd; text-align:center; font-size:10px;">ساعات: ${summary.totalHours}</td>
+      `;
+    } else if (reportType === 'payment' || reportType === 'expense') {
+      htmlContent += `
+        <td colspan="4" style="padding:6px 8px; border:1px solid #ddd; text-align:left; font-size:10px;">جمع کل</td>
+        <td style="padding:6px 8px; border:1px solid #ddd; text-align:right; font-size:10px;">${toPersianDigits((summary.totalAmount || 0).toLocaleString())} تومان</td>
+        <td colspan="3" style="padding:6px 8px; border:1px solid #ddd; text-align:center; font-size:10px;">تعداد: ${summary.count}</td>
       `;
     } else {
       htmlContent += `
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">#</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">نام</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">نام خانوادگی</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">موبایل</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">موبایل مجازی</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">تلفن ثابت</th>
-        <th style="background-color:#3498db; color:white; padding:10px; border:1px solid #ccc; text-align:center;">توضیحات</th>
+        <td colspan="6" style="padding:6px 8px; border:1px solid #ddd; text-align:left; font-size:10px;">جمع کل</td>
+        <td colspan="2" style="padding:6px 8px; border:1px solid #ddd; text-align:center; font-size:10px;">تعداد: ${summary.count}</td>
       `;
     }
-    htmlContent += `</thead><tbody>`;
+    htmlContent += '</tr>';
+  }
+  htmlContent += `</tbody></table>`;
+  tempDiv.innerHTML = htmlContent;
 
-    filteredData.forEach((item, idx) => {
-      htmlContent += '<tr>';
-      if (reportType === 'class') {
-        htmlContent += `
-          <td style="padding:8px; border:1px solid #ddd; text-align:right;">${item.teacher_name}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">${item.day}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">${item.date}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">${item.start_time}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">${item.end_time}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">${toPersianDigits(item.student_count)}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:right;">${item.description || ''}</td>
-        `;
-      } else if (reportType === 'payment') {
-        htmlContent += `
-          <td style="padding:8px; border:1px solid #ddd; text-align:right;">${item.payer_name}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">${item.day}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">${item.date}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:left;">${toPersianDigits((item.amount || 0).toLocaleString())}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:right;">${item.for_what}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">${item.payment_type}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:right;">${item.description || ''}</td>
-        `;
-      } else if (reportType === 'expense') {
-        htmlContent += `
-          <td style="padding:8px; border:1px solid #ddd; text-align:right;">${item.receiver_name}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">${item.day}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">${item.date}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:left;">${toPersianDigits((item.amount || 0).toLocaleString())}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:right;">${item.subject}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">${item.payment_type}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:right;">${item.description || ''}</td>
-        `;
-      } else {
-        htmlContent += `
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">${toPersianDigits(idx + 1)}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:right;">${item.first_name}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:right;">${item.last_name}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:left;">${toPersianDigits(item.mobile || '')}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:left;">${toPersianDigits(item.virtual_mobile || '')}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:left;">${toPersianDigits(item.landline || '')}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:right;">${item.description || '-'}</td>
-        `;
-      }
-      htmlContent += '</tr>';
-    });
-
-    const summary = getSummary();
-    if (summary) {
-      htmlContent += '<tr style="background-color:#f0f0f0; font-weight:bold;">';
-      if (reportType === 'class') {
-        htmlContent += `
-          <td colspan="5" style="padding:8px; border:1px solid #ddd; text-align:left;">جمع کل</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">تعداد کلاس‌ها: ${summary.count}</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">مجموع ساعات: ${summary.totalHours} ساعت</td>
-        `;
-      } else if (reportType === 'payment' || reportType === 'expense') {
-        htmlContent += `
-          <td colspan="3" style="padding:8px; border:1px solid #ddd; text-align:left;">جمع کل</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:right;">${toPersianDigits((summary.totalAmount || 0).toLocaleString())} تومان</td>
-          <td colspan="3" style="padding:8px; border:1px solid #ddd; text-align:center;">تعداد تراکنش: ${summary.count}</td>
-        `;
-      } else {
-        htmlContent += `
-          <td colspan="6" style="padding:8px; border:1px solid #ddd; text-align:left;">جمع کل</td>
-          <td style="padding:8px; border:1px solid #ddd; text-align:center;">تعداد مخاطبین: ${summary.count}</td>
-        `;
-      }
-      htmlContent += '</tr>';
-    }
-    htmlContent += `</tbody></table>`;
-    tempDiv.innerHTML = htmlContent;
-
-    try {
-      const canvas = await html2canvas(tempDiv, { scale: 1, logging: false, backgroundColor: '#ffffff' });
-const imgData = canvas.toDataURL('image/jpeg', 0.9);
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-      const imgWidth = 280;
-      const pageHeight = 210;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-      pdf.save(`${reportType}_report.pdf`);
-    } catch (error) {
-      console.error('PDF error:', error);
-      alert('خطا در ایجاد PDF');
-    } finally {
-      document.body.removeChild(tempDiv);
+  // ========== تنظیمات html2pdf ==========
+  const opt = {
+    margin: [8, 8, 20, 8],
+    filename: `${reportType}_report.pdf`,
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: {
+      scale: 2,
+      logging: false,
+      useCORS: true,
+      letterRendering: true
+    },
+    jsPDF: {
+      unit: 'mm',
+      format: 'a4',
+      orientation: 'portrait'
+    },
+    pagebreak: {
+      mode: ['avoid-all', 'css', 'legacy']
     }
   };
 
+  html2pdf()
+    .set(opt)
+    .from(tempDiv)
+    .save()
+    .then(() => {
+      document.body.removeChild(tempDiv);
+    })
+    .catch((err) => {
+      console.error('PDF error:', err);
+      alert('خطا در ایجاد PDF');
+      document.body.removeChild(tempDiv);
+    });
+};
+  // ========== خروجی CSV با شماره ردیف ==========
   const exportToCSV = () => {
     if (filteredData.length === 0) return alert('داده‌ای برای خروجی وجود ندارد.');
     let headers, rows;
+
     if (reportType === 'class') {
-      headers = ['نام استاد', 'روز', 'تاریخ', 'ساعت شروع', 'ساعت پایان', 'تعداد دانشجو', 'توضیحات'];
-      rows = filteredData.map(c => [c.teacher_name, c.day, c.date, c.start_time, c.end_time, toPersianDigits(c.student_count), c.description || '']);
+      headers = ['#', 'نام استاد', 'روز', 'تاریخ', 'ساعت شروع', 'ساعت پایان', 'تعداد دانشجو', 'توضیحات'];
+      rows = filteredData.map((c, idx) => [
+        idx + 1,
+        c.teacher_name,
+        c.day,
+        c.date,
+        c.start_time,
+        c.end_time,
+        toPersianDigits(c.student_count),
+        c.description || ''
+      ]);
     } else if (reportType === 'payment') {
-      headers = ['پرداخت کننده', 'روز', 'تاریخ', 'مبلغ', 'بابت', 'نوع پرداخت', 'توضیحات'];
-      rows = filteredData.map(p => [p.payer_name, p.day, p.date, toPersianDigits((p.amount || 0).toLocaleString()), p.for_what, p.payment_type, p.description || '']);
+      headers = ['#', 'پرداخت کننده', 'روز', 'تاریخ', 'مبلغ', 'بابت', 'نوع پرداخت', 'توضیحات'];
+      rows = filteredData.map((p, idx) => [
+        idx + 1,
+        p.payer_name,
+        p.day,
+        p.date,
+        toPersianDigits((p.amount || 0).toLocaleString()),
+        p.for_what,
+        p.payment_type,
+        p.description || ''
+      ]);
     } else if (reportType === 'expense') {
-      headers = ['دریافت کننده', 'روز', 'تاریخ', 'مبلغ', 'موضوع', 'نوع پرداخت', 'توضیحات'];
-      rows = filteredData.map(e => [e.receiver_name, e.day, e.date, toPersianDigits((e.amount || 0).toLocaleString()), e.subject, e.payment_type, e.description || '']);
-    } else {
-      headers = ['ردیف', 'نام', 'نام خانوادگی', 'موبایل', 'موبایل فضای مجازی', 'تلفن ثابت', 'توضیحات'];
-      rows = filteredData.map((item, idx) => [idx + 1, item.first_name, item.last_name, toPersianDigits(item.mobile || ''), toPersianDigits(item.virtual_mobile || ''), toPersianDigits(item.landline || ''), item.description || '']);
+      headers = ['#', 'دریافت کننده', 'روز', 'تاریخ', 'مبلغ', 'موضوع', 'نوع پرداخت', 'توضیحات'];
+      rows = filteredData.map((e, idx) => [
+        idx + 1,
+        e.receiver_name,
+        e.day,
+        e.date,
+        toPersianDigits((e.amount || 0).toLocaleString()),
+        e.subject,
+        e.payment_type,
+        e.description || ''
+      ]);
+    } else { // phonebook
+      headers = ['#', 'نام', 'نام خانوادگی', 'موبایل', 'موبایل فضای مجازی', 'تلفن ثابت', 'توضیحات'];
+      rows = filteredData.map((item, idx) => [
+        idx + 1,
+        item.first_name,
+        item.last_name,
+        toPersianDigits(item.mobile || ''),
+        toPersianDigits(item.virtual_mobile || ''),
+        toPersianDigits(item.landline || ''),
+        item.description || ''
+      ]);
     }
+
     const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -415,16 +506,16 @@ const imgData = canvas.toDataURL('image/jpeg', 0.9);
 
       {reportType === 'class' && (
         <>
-          <div className="form-group"><label>نام استاد</label><Select   options={teachers.map(t => ({ value: `${t.first_name} ${t.last_name}`, label: `${t.first_name} ${t.last_name}` }))} onChange={(selected) => setFilters({ ...filters, teacherId: selected?.value || '' })} isClearable isSearchable placeholder="همه اساتید" /></div>
+          <div className="form-group"><label>نام استاد</label><Select options={teachers.map(t => ({ value: `${t.first_name} ${t.last_name}`, label: `${t.first_name} ${t.last_name}` }))} onChange={(selected) => setFilters({ ...filters, teacherId: selected?.value || '' })} isClearable isSearchable placeholder="همه اساتید" /></div>
           <div className="form-group"><label>روز هفته</label><select value={filters.classDay} onChange={e => setFilters({ ...filters, classDay: e.target.value })}><option value="">همه روزها</option><option>شنبه</option><option>یکشنبه</option><option>دوشنبه</option><option>سه‌شنبه</option><option>چهارشنبه</option><option>پنجشنبه</option><option>جمعه</option></select></div>
           <div className="form-group">
-  <label>تعداد دانشجو (دقیق)</label>
-  <PersianNumberInput
-    value={filters.studentCount}
-    onChange={(val) => setFilters({ ...filters, studentCount: val })}
-    placeholder="مثال: ۵"
-  />
-</div>
+            <label>تعداد دانشجو (دقیق)</label>
+            <PersianNumberInput
+              value={filters.studentCount}
+              onChange={(val) => setFilters({ ...filters, studentCount: val })}
+              placeholder="مثال: ۵"
+            />
+          </div>
         </>
       )}
       {reportType === 'payment' && (
@@ -440,7 +531,7 @@ const imgData = canvas.toDataURL('image/jpeg', 0.9);
         <div className="form-group"><label>جستجو (نام، نام خانوادگی، موبایل)</label><input type="text" value={filters.phonebookSearch} onChange={e => setFilters({ ...filters, phonebookSearch: e.target.value })} placeholder="متن مورد نظر..." className="w-full px-3 py-2 border rounded-lg" /></div>
       )}
 
-       <div className="form-row">
+      <div className="form-row">
         <div className="form-group">
           <label>جستجو در توضیحات</label>
           <input
@@ -469,111 +560,49 @@ const imgData = canvas.toDataURL('image/jpeg', 0.9);
                 <tr>
                   {reportType === 'class' && (
                     <>
-                      <th style={{ width: '5%', cursor: 'pointer' }} onClick={() => requestSort('id')}>
-                        # {getSortIndicator('id')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('teacher_name')}>
-                        نام استاد {getSortIndicator('teacher_name')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('day')}>
-                        روز {getSortIndicator('day')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('date')}>
-                        تاریخ {getSortIndicator('date')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('start_time')}>
-                        ساعت شروع {getSortIndicator('start_time')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('end_time')}>
-                        ساعت پایان {getSortIndicator('end_time')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('student_count')}>
-                        تعداد دانشجو {getSortIndicator('student_count')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('description')}>
-                        توضیحات {getSortIndicator('description')}
-                      </th>
+                      <th style={{ width: '5%', cursor: 'pointer' }} onClick={() => requestSort('id')}># {getSortIndicator('id')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('teacher_name')}>نام استاد {getSortIndicator('teacher_name')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('day')}>روز {getSortIndicator('day')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('date')}>تاریخ {getSortIndicator('date')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('start_time')}>ساعت شروع {getSortIndicator('start_time')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('end_time')}>ساعت پایان {getSortIndicator('end_time')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('student_count')}>تعداد دانشجو {getSortIndicator('student_count')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('description')}>توضیحات {getSortIndicator('description')}</th>
                     </>
                   )}
                   {reportType === 'payment' && (
                     <>
-                      <th style={{ width: '5%', cursor: 'pointer' }} onClick={() => requestSort('id')}>
-                        # {getSortIndicator('id')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('payer_name')}>
-                        پرداخت کننده {getSortIndicator('payer_name')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('day')}>
-                        روز {getSortIndicator('day')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('date')}>
-                        تاریخ {getSortIndicator('date')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('amount')}>
-                        مبلغ (تومان) {getSortIndicator('amount')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('for_what')}>
-                        بابت {getSortIndicator('for_what')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('payment_type')}>
-                        نوع پرداخت {getSortIndicator('payment_type')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('description')}>
-                        توضیحات {getSortIndicator('description')}
-                      </th>
+                      <th style={{ width: '5%', cursor: 'pointer' }} onClick={() => requestSort('id')}># {getSortIndicator('id')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('payer_name')}>پرداخت کننده {getSortIndicator('payer_name')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('day')}>روز {getSortIndicator('day')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('date')}>تاریخ {getSortIndicator('date')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('amount')}>مبلغ (تومان) {getSortIndicator('amount')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('for_what')}>بابت {getSortIndicator('for_what')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('payment_type')}>نوع پرداخت {getSortIndicator('payment_type')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('description')}>توضیحات {getSortIndicator('description')}</th>
                     </>
                   )}
                   {reportType === 'expense' && (
                     <>
-                      <th style={{ width: '5%', cursor: 'pointer' }} onClick={() => requestSort('id')}>
-                        # {getSortIndicator('id')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('receiver_name')}>
-                        دریافت کننده {getSortIndicator('receiver_name')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('day')}>
-                        روز {getSortIndicator('day')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('date')}>
-                        تاریخ {getSortIndicator('date')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('amount')}>
-                        مبلغ (تومان) {getSortIndicator('amount')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('subject')}>
-                        موضوع {getSortIndicator('subject')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('payment_type')}>
-                        نوع پرداخت {getSortIndicator('payment_type')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('description')}>
-                        توضیحات {getSortIndicator('description')}
-                      </th>
+                      <th style={{ width: '5%', cursor: 'pointer' }} onClick={() => requestSort('id')}># {getSortIndicator('id')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('receiver_name')}>دریافت کننده {getSortIndicator('receiver_name')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('day')}>روز {getSortIndicator('day')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('date')}>تاریخ {getSortIndicator('date')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('amount')}>مبلغ (تومان) {getSortIndicator('amount')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('subject')}>موضوع {getSortIndicator('subject')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('payment_type')}>نوع پرداخت {getSortIndicator('payment_type')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('description')}>توضیحات {getSortIndicator('description')}</th>
                     </>
                   )}
                   {reportType === 'phonebook' && (
                     <>
-                      <th style={{ width: '5%', cursor: 'pointer' }} onClick={() => requestSort('id')}>
-                        # {getSortIndicator('id')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('first_name')}>
-                        نام {getSortIndicator('first_name')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('last_name')}>
-                        نام خانوادگی {getSortIndicator('last_name')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('mobile')}>
-                        موبایل {getSortIndicator('mobile')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('virtual_mobile')}>
-                        موبایل مجازی {getSortIndicator('virtual_mobile')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('landline')}>
-                        تلفن ثابت {getSortIndicator('landline')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('description')}>
-                        توضیحات {getSortIndicator('description')}
-                      </th>
+                      <th style={{ width: '5%', cursor: 'pointer' }} onClick={() => requestSort('id')}># {getSortIndicator('id')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('first_name')}>نام {getSortIndicator('first_name')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('last_name')}>نام خانوادگی {getSortIndicator('last_name')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('mobile')}>موبایل {getSortIndicator('mobile')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('virtual_mobile')}>موبایل مجازی {getSortIndicator('virtual_mobile')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('landline')}>تلفن ثابت {getSortIndicator('landline')}</th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => requestSort('description')}>توضیحات {getSortIndicator('description')}</th>
                     </>
                   )}
                 </tr>
@@ -583,7 +612,7 @@ const imgData = canvas.toDataURL('image/jpeg', 0.9);
                   <tr key={idx}>
                     {reportType === 'class' && (
                       <>
-<td style={{ textAlign: 'center' }}>{toPersianDigits(idx + 1)}</td>
+                        <td style={{ textAlign: 'center' }}>{toPersianDigits(idx + 1)}</td>
                         <td>{item.teacher_name}</td>
                         <td>{item.day}</td>
                         <td>{item.date}</td>
@@ -595,7 +624,7 @@ const imgData = canvas.toDataURL('image/jpeg', 0.9);
                     )}
                     {reportType === 'payment' && (
                       <>
-<td style={{ textAlign: 'center' }}>{toPersianDigits(idx + 1)}</td>
+                        <td style={{ textAlign: 'center' }}>{toPersianDigits(idx + 1)}</td>
                         <td>{item.payer_name}</td>
                         <td>{item.day}</td>
                         <td>{item.date}</td>
@@ -607,7 +636,7 @@ const imgData = canvas.toDataURL('image/jpeg', 0.9);
                     )}
                     {reportType === 'expense' && (
                       <>
-<td style={{ textAlign: 'center' }}>{toPersianDigits(idx + 1)}</td>
+                        <td style={{ textAlign: 'center' }}>{toPersianDigits(idx + 1)}</td>
                         <td>{item.receiver_name}</td>
                         <td>{item.day}</td>
                         <td>{item.date}</td>
@@ -619,7 +648,7 @@ const imgData = canvas.toDataURL('image/jpeg', 0.9);
                     )}
                     {reportType === 'phonebook' && (
                       <>
-                        <td style={{ textAlign: 'center' }}>{toPersianDigits(item.id) || toPersianDigits(idx + 1)}</td>
+                        <td style={{ textAlign: 'center' }}>{toPersianDigits(idx + 1)}</td>
                         <td>{item.first_name}</td>
                         <td>{item.last_name}</td>
                         <td>{toPersianDigits(item.mobile)}</td>
