@@ -232,7 +232,7 @@ const Reports = () => {
 // ========== خروجی PDF با کیفیت بالا و نمایش کامل توضیحات ==========
 // ========== خروجی PDF با کیفیت بالا و نمایش کامل توضیحات ==========
 const exportToPDF = () => {
-  if (filteredData.length === 0) return alert('داده‌ای برای خروجی وجود ندارد.');
+  if (sortedData.length === 0) return alert('داده‌ای برای خروجی وجود ندارد.'); // ← استفاده از sortedData
 
   const tempDiv = document.createElement('div');
   tempDiv.style.direction = 'rtl';
@@ -306,7 +306,7 @@ const exportToPDF = () => {
   htmlContent += `</thead><tbody>`;
 
   // ========== ردیف‌های داده ==========
-  filteredData.forEach((item, idx) => {
+  sortedData.forEach((item, idx) => {
     htmlContent += '<tr>';
     if (reportType === 'class') {
       htmlContent += `
